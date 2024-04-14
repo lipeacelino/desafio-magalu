@@ -1,4 +1,4 @@
-package com.github.lipeacelino.fileconvertapi.entities;
+package com.github.lipeacelino.fileconvertapi.documents;
 
 import lombok.*;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -13,8 +13,6 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 public class Order {
-
-//    private String id;
 
     @Indexed(name="orderIdIndex")
     private Integer orderId;

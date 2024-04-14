@@ -1,45 +1,44 @@
 package com.github.lipeacelino.fileconvertapi.controllers;
 
+import com.github.lipeacelino.fileconvertapi.dto.OrderDetailDTOResponse;
+import com.github.lipeacelino.fileconvertapi.dto.ParametersDTOInput;
 import com.github.lipeacelino.fileconvertapi.services.OrderService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 
 @RestController
 @RequestMapping("/orders")
+@RequiredArgsConstructor
 public class OrderController {
 
     @Autowired
-    private OrderService orderService;
+    private final OrderService orderService;
 
-//    @ResponseStatus
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/upload")
+    @CacheEvict(allEntries = true, value = "orderDetail")
     public void saveOrderDetails(@RequestParam MultipartFile file) {
                 orderService.saveOrderDetails(file);
-//                String userId = line.replaceFirst("\\s.*$", ""); //remove tudo após o primeiro espaço
-//
-//                String username = line.replaceAll("\\d+.", "") //remove pontos e tudo que não for letra
-//                       .replaceAll("^\\s+?(?=[a-zA-Z])", "") //remove espaços do início
-//                       .replaceAll("(?<=[a-zA-Z])\\s+$", ""); //remove espaços do final
-//
-//                String orderId = line.replaceAll(".*(?<=[a-zA-Z])(\\d+)(?=\\s).*", "$1") //mantém apenas o orderId e productId
-//                        .replaceAll("^(.{10}).*", "$1"); //mantém apenas o orderId
-//
-//                String productId = line.replaceAll(".*(?<=[a-zA-Z])(\\d+)(?=\\s).*", "$1") //mantém apenas o orderId e productId
-//                        .replaceAll("^.{10}(.{10}).*", "$1"); //mantém apenas o productId
-//
-//                String value = line.replaceFirst("^.*\\s", "") //mantém apenas value e date
-//                        .replaceAll("(\\.\\d{2}).*$", "$1"); //mantém apenas value
-//
-//                String date = line.replaceFirst("^.*\\s", "") //mantém apenas value e date
-//                        .replaceAll("^.*(?=(.{8})$)", ""); //mantém apenas o date
-            }
+    }
 
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping
+    public Page<OrderDetailDTOResponse> findAllOrderDetail(
+            @PageableDefault(size = 5)
+                             @SortDefault.SortDefaults({
+                                @SortDefault(sort = "userId", direction = Sort.Direction.ASC)
+                             })
+                             Pageable pageable,
+            ParametersDTOInput parametersDTOInput){
+    return orderService.findAllOrderDetail(pageable, parametersDTOInput);
+    }
 }
