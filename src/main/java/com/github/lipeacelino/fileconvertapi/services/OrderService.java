@@ -8,7 +8,6 @@ import com.github.lipeacelino.fileconvertapi.documents.Product;
 import com.github.lipeacelino.fileconvertapi.dto.ParametersDTOInput;
 import com.github.lipeacelino.fileconvertapi.mappers.OrderMapper;
 import com.github.lipeacelino.fileconvertapi.repositories.OrderDetailRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -17,7 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,7 +45,7 @@ public class OrderService {
     private static final Pattern ORDER_ID_PRODUCT_ID_PATTERN = Pattern.compile(".*(?<=[(a-zA-Z)+.])(\\d+)(?=\\s).*");
     private static final Pattern ORDER_ID_PATTERN = Pattern.compile("^(.{10}).*");
     private static final Pattern PRODUCT_ID_PATTERN = Pattern.compile("^.{10}(.{10}).*");
-    private static final Pattern USERNAME_PATTERN = Pattern.compile("^\\d{10}\\s+|\\d{10}\\d+.*$");
+    private static final Pattern NAME_PATTERN = Pattern.compile("^\\d{10}\\s+|\\d{10}\\d+.*$");
 
     public void saveOrderDetails(MultipartFile file) {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
@@ -66,7 +64,7 @@ public class OrderService {
         var query = new Query();
         query.with(pageable);
         if(parametersDTOInput.userId()!=null)query.addCriteria(Criteria.where("userId").is(parametersDTOInput.userId()));
-        if(parametersDTOInput.name()!=null)query.addCriteria(Criteria.where("username").regex("^"+parametersDTOInput.name()));
+        if(parametersDTOInput.name()!=null)query.addCriteria(Criteria.where("name").regex("^"+parametersDTOInput.name(),"i"));
         var total = mongoTemplate.count(query, OrderDetail.class);
         var pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         var content = mongoTemplate.find(query, OrderDetail.class);
@@ -76,7 +74,7 @@ public class OrderService {
 
     private OrderDataDTO extractData(String line)  {
             var userId = getUserIdFromLine(line);
-            var username = getUsernameFromLine(line);
+            var name = getNameFromLine(line);
             var orderId = getOrderIdFromLine(line);
             var productId = getProductIdFromLine(line);
             var value = getValueFromLine(line);
@@ -84,7 +82,7 @@ public class OrderService {
 
         return OrderDataDTO.builder()
                 .userId(userId)
-                .username(username)
+                .name(name)
                 .orderId(orderId)
                 .productId(productId)
                 .value(value)
@@ -147,7 +145,7 @@ public class OrderService {
     private OrderDetail createOrderDetail(OrderDataDTO orderDataDTO, Order order) {
         return OrderDetail.builder()
                 .userId(orderDataDTO.userId())
-                .username(orderDataDTO.username())
+                .name(orderDataDTO.name())
                 .orders(new ArrayList<>(List.of(order)))
                 .build();
     }
@@ -156,8 +154,8 @@ public class OrderService {
         return Integer.valueOf(line.substring(0, 10));
     }
 
-    private String getUsernameFromLine(String line) {
-        return USERNAME_PATTERN.matcher(line).replaceAll("").trim();
+    private String getNameFromLine(String line) {
+        return NAME_PATTERN.matcher(line).replaceAll("").trim();
     }
 
     private Integer getOrderIdFromLine(String line) {

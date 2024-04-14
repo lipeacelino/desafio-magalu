@@ -21,7 +21,8 @@ public class OrderDetail {
     @Indexed(name = "userIdIdx")
     private Integer userId;
 
-    private String username;
+    @Indexed(name = "nameIdx")
+    private String name;
 
     private List<Order> orders;
 }

@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 @Builder
 public record OrderDataDTO(
         Integer userId,
-        String username,
+        String name,
         Integer orderId,
         Integer productId,
         BigDecimal value,

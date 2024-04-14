@@ -7,7 +7,7 @@ import java.util.List;
 public record OrderDetailDTOResponse(
         @JsonProperty("user_id")
         Integer userId,
-        String username,
+        String name,
         List<OrderDTOResponse> orders
 ) {
 }
