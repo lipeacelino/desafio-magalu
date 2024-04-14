@@ -6,6 +6,10 @@ import com.github.lipeacelino.fileconvertapi.entities.OrderDetail;
 import com.github.lipeacelino.fileconvertapi.entities.Product;
 import com.github.lipeacelino.fileconvertapi.repositories.OrderDetailRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.FindAndReplaceOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,6 +29,9 @@ public class OrderService {
 
     @Autowired
     private OrderDetailRepository orderDetailRepository;
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     private static final Pattern ORDER_ID_PRODUCT_ID_PATTERN = Pattern.compile(".*(?<=[(a-zA-Z)+.])(\\d+)(?=\\s).*");
     private static final Pattern ORDER_ID_PATTERN = Pattern.compile("^(.{10}).*");
@@ -89,10 +96,9 @@ public class OrderService {
     public void processForSave(List<OrderDataDTO> orderDataDTOList) {
         orderDataDTOList.forEach(orderDataDTO -> {
             var product = buildProduct(orderDataDTO);
-
-            buildOrder(orderDataDTO, product);
-
-//            buildOrderDetail(orderDataDTO, order, product);
+            var order = buildOrder(orderDataDTO, product);
+            var orderDetail = buildOrderDetail(orderDataDTO, order);
+            orderDetailRepository.save(orderDetail);
         });
     }
     private Product buildProduct(OrderDataDTO orderDataDTO) {
@@ -102,7 +108,7 @@ public class OrderService {
                 .build();
     }
 
-    private void buildOrder(OrderDataDTO orderDataDTO, Product product) {
+    private Order buildOrder(OrderDataDTO orderDataDTO, Product product) {
         var orderDetailOptional = orderDetailRepository.findOrderDetailByOrderId(orderDataDTO.orderId());
         Order order;
         if (orderDetailOptional.isPresent()) {
@@ -122,8 +128,7 @@ public class OrderService {
                     .products(new ArrayList<>(List.of(product)))
                     .build();
         }
-        buildOrderDetail(orderDataDTO, order);
-        orderDetailRepository.save(orderDetailOptional.get());
+        return order;
     }
 
     private OrderDetail buildOrderDetail(OrderDataDTO orderDataDTO, Order order) {
@@ -144,12 +149,14 @@ public class OrderService {
                     .userId(orderDataDTO.userId())
                     .username(orderDataDTO.username())
                     .orders(new ArrayList<>(List.of(order)))
-                    .build();
-//            var order = Order.builder().orderId(orderDataDTO.orderId()).total(orderDataDTO.value()).date(LocalDate.parse(orderDataDTO.date(), DateTimeFormatter.ofPattern("yyyyMMdd"))).products(new ArrayList<>(List.of(product))).build();
-//            order.getProducts().forEach(prod -> order.setTotal(order.getTotal().add(prod.getValue())));
+                    .build();;
         }
-        orderDetailRepository.save(orderDetail);
         return orderDetail;
+    }
+
+    private void upsertOrderDetail(OrderDetail orderDetail, Query query) {
+        FindAndReplaceOptions options = FindAndReplaceOptions.options().upsert().returnNew();
+        mongoTemplate.findAndReplace(query, orderDetail, options, OrderDetail.class.getName());
     }
 
     private Integer getUserIdFromLine(String line) {
