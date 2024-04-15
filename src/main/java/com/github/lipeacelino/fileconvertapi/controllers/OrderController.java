@@ -20,14 +20,13 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class OrderController {
 
-    @Autowired
     private final OrderService orderService;
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/upload")
     @CacheEvict(allEntries = true, value = "orderDetail")
-    public void saveOrderDetails(@RequestParam MultipartFile file) {
-                orderService.saveOrderDetails(file);
+    public void saveOrderDetailFromFile(@RequestParam MultipartFile file) {
+                orderService.saveOrderDetailFromFile(file);
     }
 
     @ResponseStatus(HttpStatus.OK)

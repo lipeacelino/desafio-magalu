@@ -8,6 +8,7 @@ import com.github.lipeacelino.fileconvertapi.documents.Product;
 import com.github.lipeacelino.fileconvertapi.dto.ParametersDTOInput;
 import com.github.lipeacelino.fileconvertapi.mappers.OrderMapper;
 import com.github.lipeacelino.fileconvertapi.repositories.OrderDetailRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -31,23 +32,21 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
-    @Autowired
-    private OrderDetailRepository orderDetailRepository;
+    private final OrderDetailRepository orderDetailRepository;
 
-    @Autowired
-    private OrderMapper orderMapper;
+    private final OrderMapper orderMapper;
 
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    private final MongoTemplate mongoTemplate;
 
     private static final Pattern ORDER_ID_PRODUCT_ID_PATTERN = Pattern.compile(".*(?<=[(a-zA-Z)+.])(\\d+)(?=\\s).*");
     private static final Pattern ORDER_ID_PATTERN = Pattern.compile("^(.{10}).*");
     private static final Pattern PRODUCT_ID_PATTERN = Pattern.compile("^.{10}(.{10}).*");
     private static final Pattern NAME_PATTERN = Pattern.compile("^\\d{10}\\s+|\\d{10}\\d+.*$");
 
-    public void saveOrderDetails(MultipartFile file) {
+    public void saveOrderDetailFromFile(MultipartFile file) {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {

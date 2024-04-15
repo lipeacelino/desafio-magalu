@@ -8,7 +8,7 @@ import java.util.List;
 
 @Builder
 public record ApiErrorDTO(
-        @JsonFormat(pattern="dd-MM-yyyy HH:mm:ss")
+        @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
         LocalDateTime timestamp,
 
         Integer code,
