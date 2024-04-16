@@ -1,15 +1,14 @@
 package com.github.lipeacelino.fileconvertapi.services;
 
-import com.github.lipeacelino.fileconvertapi.dto.OrderDataDTO;
-import com.github.lipeacelino.fileconvertapi.dto.OrderDetailDTOResponse;
 import com.github.lipeacelino.fileconvertapi.documents.Order;
 import com.github.lipeacelino.fileconvertapi.documents.OrderDetail;
 import com.github.lipeacelino.fileconvertapi.documents.Product;
-import com.github.lipeacelino.fileconvertapi.dto.ParametersDTOInput;
+import com.github.lipeacelino.fileconvertapi.dto.OrderDataDTO;
+import com.github.lipeacelino.fileconvertapi.dto.OrderDetailResponseDTO;
+import com.github.lipeacelino.fileconvertapi.dto.ParametersInputDTO;
 import com.github.lipeacelino.fileconvertapi.mappers.OrderMapper;
 import com.github.lipeacelino.fileconvertapi.repositories.OrderDetailRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -59,11 +58,11 @@ public class OrderService {
     }
 
     @Cacheable("orderDetail")
-    public Page<OrderDetailDTOResponse> findAllOrderDetail(Pageable pageable, ParametersDTOInput parametersDTOInput) {
+    public Page<OrderDetailResponseDTO> findAllOrderDetail(Pageable pageable, ParametersInputDTO parametersInputDTO) {
         var query = new Query();
         query.with(pageable);
-        if(parametersDTOInput.userId()!=null)query.addCriteria(Criteria.where("userId").is(parametersDTOInput.userId()));
-        if(parametersDTOInput.name()!=null)query.addCriteria(Criteria.where("name").regex("^"+parametersDTOInput.name(),"i"));
+        if(parametersInputDTO.userId()!=null)query.addCriteria(Criteria.where("userId").is(parametersInputDTO.userId()));
+        if(parametersInputDTO.name()!=null)query.addCriteria(Criteria.where("name").regex("^"+ parametersInputDTO.name(),"i"));
         var total = mongoTemplate.count(query, OrderDetail.class);
         var pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         var content = mongoTemplate.find(query, OrderDetail.class);
@@ -90,11 +89,12 @@ public class OrderService {
     }
 
     private OrderDetail processData(OrderDataDTO orderDataDTO) {
+        validateData(orderDataDTO);
         var product = Product.builder()
                 .productId(orderDataDTO.productId())
                 .value(orderDataDTO.value())
                 .build();
-        var orderDetailOptional = orderDetailRepository.findOrderDetailByUserId(orderDataDTO.userId());
+        var orderDetailOptional = orderDetailRepository.findOrderDetailByUserIdAndName(orderDataDTO.userId(), orderDataDTO.name());
         Order order;
         OrderDetail orderDetail;
         if (orderDetailOptional.isPresent()){
@@ -106,6 +106,26 @@ public class OrderService {
             orderDetail = createOrderDetail(orderDataDTO, order);
         }
         return orderDetail;
+    }
+
+    private void validateData(OrderDataDTO orderDataDTO) {
+        if (orderExistsForAnotherCustomer(orderDataDTO.userId(), orderDataDTO.orderId())) {
+            System.out.println(orderDataDTO + " - Pedido existe para outro usuário");
+//            throw new RuntimeException("pedido existe para outro usuário");
+        }
+        if (findOrderDetailByOrderIdAndProductId(orderDataDTO.orderId(), orderDataDTO.productId())) {
+            System.out.println(orderDataDTO + " Pedido e produto já foram cadastrados antes");
+//            throw new RuntimeException("pedido e produto já foram cadastrados antes");
+        }
+    }
+
+    private boolean orderExistsForAnotherCustomer(Integer userId, Integer orderId) {
+       return orderDetailRepository.findOrderDetailByUserIdAndOrderId(userId, orderId).isPresent();
+    }
+
+    private boolean findOrderDetailByOrderIdAndProductId(Integer orderId, Integer productId) {
+        return orderDetailRepository.findOrderDetailByOrderIdAndProductId(orderId, productId).isPresent();
+        //se for juntar todas as exceções para mostrar no final da importação tem que botar pra receber uma lista aqui se não lançar a exceção
     }
 
     private Order updateOrder(OrderDetail orderDetail, OrderDataDTO orderDataDTO, Product product) {

@@ -1,6 +1,7 @@
 package com.github.lipeacelino.fileconvertapi.documents;
 
 import lombok.*;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
@@ -13,6 +14,9 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
+@CompoundIndex(name = "index_userIdAndName)", def = "{'userId': 1, 'name': 1}")
+@CompoundIndex(name = "index_userIdAndOrderId)", def = "{'userId': 1, 'orders.orderId': 1}")
+@CompoundIndex(name = "index_userIdAndProductId)", def = "{'orders.orderId': 1, 'orders.products.productId': 1}")
 public class OrderDetail {
 
     @MongoId

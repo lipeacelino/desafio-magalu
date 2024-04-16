@@ -1,10 +1,9 @@
 package com.github.lipeacelino.fileconvertapi.controllers;
 
-import com.github.lipeacelino.fileconvertapi.dto.OrderDetailDTOResponse;
-import com.github.lipeacelino.fileconvertapi.dto.ParametersDTOInput;
+import com.github.lipeacelino.fileconvertapi.dto.OrderDetailResponseDTO;
+import com.github.lipeacelino.fileconvertapi.dto.ParametersInputDTO;
 import com.github.lipeacelino.fileconvertapi.services.OrderService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,13 +30,13 @@ public class OrderController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping
-    public Page<OrderDetailDTOResponse> findAllOrderDetail(
+    public Page<OrderDetailResponseDTO> findAllOrderDetail(
             @PageableDefault(size = 5)
                              @SortDefault.SortDefaults({
                                 @SortDefault(sort = "userId", direction = Sort.Direction.ASC)
                              })
                              Pageable pageable,
-            ParametersDTOInput parametersDTOInput){
-    return orderService.findAllOrderDetail(pageable, parametersDTOInput);
+            ParametersInputDTO parametersInputDTO){
+    return orderService.findAllOrderDetail(pageable, parametersInputDTO);
     }
 }

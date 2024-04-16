@@ -1,6 +1,9 @@
 package com.github.lipeacelino.fileconvertapi.dto;
 
-public record ParametersDTOInput(
+import lombok.Builder;
+
+@Builder
+public record ParametersInputDTO(
         Integer userId,
         String name
 ) {
