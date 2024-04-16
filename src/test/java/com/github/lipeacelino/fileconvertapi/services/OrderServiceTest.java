@@ -9,6 +9,7 @@ import com.github.lipeacelino.fileconvertapi.dto.ParametersInputDTO;
 import com.github.lipeacelino.fileconvertapi.dto.ProductResponseDTO;
 import com.github.lipeacelino.fileconvertapi.mappers.OrderMapper;
 import com.github.lipeacelino.fileconvertapi.repositories.OrderDetailRepository;
+import com.github.lipeacelino.fileconvertapi.util.TestUtil;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,13 +20,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.mock.web.MockMultipartFile;
 
-import java.io.File;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -51,76 +47,76 @@ class OrderServiceTest {
     @InjectMocks
     private OrderService orderService;
 
-    private final Integer userId = 80;
+    private static final Integer USER_ID = 80;
 
-    private final String name = "Tabitha Kuhn";
+    private static final String NAME = "Tabitha Kuhn";
 
-    private final Integer orderId = 877;
+    private static final Integer ORDER_ID = 877;
 
-    private final Integer productId = 4;
+    private static final Integer PRODUCT_ID = 4;
 
-    private final Integer productIdInFile = 3;
+    private static final Integer PRODUCT_ID_IN_FILE = 3;
 
-    private final BigDecimal value = new BigDecimal("817.13");
+    private static final BigDecimal VALUE = new BigDecimal("817.13");
 
-    private final String date = "20210612";
+    private static final String DATE = "20210612";
 
     @Test
     @SneakyThrows
     void shouldUpdateWhenSaveOrderDetailFromFile() {
 
-        var mockMultipartFile = getMockMultipartFile();
+        var mockMultipartFile = TestUtil.getMockMultipartFile();
 
-        var product = getProduct();
+        var product = createProduct();
 
-        var orderDetail = getOrderDetail();
+        var orderDetail = createOrderDetail();
 
-        when(orderDetailRepository.findOrderDetailByUserIdAndName(userId, name)).thenReturn(Optional.of(orderDetail));
+        when(orderDetailRepository.findOrderDetailByUserIdAndName(USER_ID, NAME)).thenReturn(Optional.of(orderDetail));
         orderService.saveOrderDetailFromFile(mockMultipartFile);
-        verify(orderDetailRepository).findOrderDetailByUserIdAndName(userId, name);
-        verify(orderDetailRepository).findOrderDetailByUserIdAndOrderId(userId, orderId);
-        verify(orderDetailRepository).findOrderDetailByOrderIdAndProductId(orderId, productIdInFile);
+        verify(orderDetailRepository).findOrderDetailByUserIdAndName(USER_ID, NAME);
+        verify(orderDetailRepository).findOrderDetailByUserIdAndOrderId(USER_ID, ORDER_ID);
+        verify(orderDetailRepository).findOrderDetailByOrderIdAndProductId(ORDER_ID, PRODUCT_ID_IN_FILE);
 
         ArgumentCaptor<OrderDetail> orderDetailCaptor = ArgumentCaptor.forClass(OrderDetail.class);
         verify(orderDetailRepository).save(orderDetailCaptor.capture());
 
         var savedOrderDetail = orderDetailCaptor.getValue();
         var savedOrder = savedOrderDetail.getOrders().get(0);
-        assertEquals(userId, savedOrderDetail.getUserId());
-        assertEquals(orderId, savedOrder.getOrderId());
-        assertEquals(productIdInFile, savedOrder.getProducts().get(1).getProductId());
+        assertEquals(USER_ID, savedOrderDetail.getUserId());
+        assertEquals(ORDER_ID, savedOrder.getOrderId());
+        assertEquals(PRODUCT_ID_IN_FILE, savedOrder.getProducts().get(1).getProductId());
         assertTrue(savedOrder.getProducts().size() > 1);
     }
 
     @Test
     @SneakyThrows
     void shouldCreateWhenSaveOrderDetailFromFile() {
-        var mockMultipartFile = getMockMultipartFile();
+        var mockMultipartFile = TestUtil.getMockMultipartFile();
 
-        when(orderDetailRepository.findOrderDetailByUserIdAndName(userId, name)).thenReturn(Optional.empty());
+        when(orderDetailRepository.findOrderDetailByUserIdAndName(USER_ID, NAME)).thenReturn(Optional.empty());
         orderService.saveOrderDetailFromFile(mockMultipartFile);
-        verify(orderDetailRepository).findOrderDetailByUserIdAndName(userId, name);
-        verify(orderDetailRepository).findOrderDetailByUserIdAndOrderId(userId, orderId);
-        verify(orderDetailRepository).findOrderDetailByOrderIdAndProductId(orderId, productIdInFile);
+        verify(orderDetailRepository).findOrderDetailByUserIdAndName(USER_ID, NAME);
+        verify(orderDetailRepository).findOrderDetailByUserIdAndOrderId(USER_ID, ORDER_ID);
+        verify(orderDetailRepository).findOrderDetailByOrderIdAndProductId(ORDER_ID, PRODUCT_ID_IN_FILE);
 
         ArgumentCaptor<OrderDetail> orderDetailCaptor = ArgumentCaptor.forClass(OrderDetail.class);
         verify(orderDetailRepository).save(orderDetailCaptor.capture());
 
         var savedOrderDetail = orderDetailCaptor.getValue();
         var savedOrder = savedOrderDetail.getOrders().get(0);
-        assertEquals(userId, savedOrderDetail.getUserId());
-        assertEquals(orderId, savedOrder.getOrderId());
-        assertEquals(productIdInFile, savedOrder.getProducts().get(0).getProductId());
+        assertEquals(USER_ID, savedOrderDetail.getUserId());
+        assertEquals(ORDER_ID, savedOrder.getOrderId());
+        assertEquals(PRODUCT_ID_IN_FILE, savedOrder.getProducts().get(0).getProductId());
         assertEquals(1, savedOrder.getProducts().size());
     }
 
     @Test
     void findAllOrderDetailWithFilters() {
         var pageable = PageRequest.of(0, 10);
-        var parametersDTOInput = ParametersInputDTO.builder().userId(userId).name(name).build();
+        var parametersDTOInput = ParametersInputDTO.builder().userId(USER_ID).name(NAME).build();
 
-        var orderDetails = List.of(getOrderDetail());
-        var dtoResponse = getOrderDetailResponseDTO();
+        var orderDetails = List.of(createOrderDetail());
+        var dtoResponse = createOrderDetailResponseDTO();
 
         when(mongoTemplate.find(any(Query.class), eq(OrderDetail.class))).thenReturn(orderDetails);
         when(mongoTemplate.count(any(Query.class), eq(OrderDetail.class))).thenReturn((long) orderDetails.size());
@@ -136,67 +132,52 @@ class OrderServiceTest {
         verify(orderMapper).mapOrderDetailToOrderDetailDTOResponse(any(OrderDetail.class));
     }
 
-    @SneakyThrows
-    private MockMultipartFile getMockMultipartFile() {
-        var path = Paths.get("src/test/resources", "data_1.txt");
-        var file = path.toFile();
-
-        byte[] content = Files.readAllBytes(file.toPath());
-
-        return new MockMultipartFile(
-                "file",
-                file.getName(),
-                "text/plain",
-                content
-        );
-    }
-
-    private ProductResponseDTO getProductResponseDTO() {
+    private ProductResponseDTO createProductResponseDTO() {
         return ProductResponseDTO.builder()
-                .productId(productId)
-                .value(String.valueOf(value))
+                .productId(PRODUCT_ID)
+                .value(String.valueOf(VALUE))
                 .build();
     }
 
-    private OrderResponseDTO getOrderResponseDTO() {
+    private OrderResponseDTO createOrderResponseDTO() {
         return OrderResponseDTO.builder()
-                .orderId(orderId)
-                .total(String.valueOf(value))
-                .date(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd")))
-                .products(new ArrayList<>(List.of(getProductResponseDTO())))
+                .orderId(ORDER_ID)
+                .total(String.valueOf(VALUE))
+                .date(LocalDate.parse(DATE, DateTimeFormatter.ofPattern("yyyyMMdd")))
+                .products(new ArrayList<>(List.of(createProductResponseDTO())))
                 .build();
     }
 
-    private OrderDetailResponseDTO getOrderDetailResponseDTO() {
+    private OrderDetailResponseDTO createOrderDetailResponseDTO() {
         return OrderDetailResponseDTO.builder()
-                .userId(userId)
-                .name(name)
-                .orders(new ArrayList<>(List.of(getOrderResponseDTO())))
+                .userId(USER_ID)
+                .name(NAME)
+                .orders(new ArrayList<>(List.of(createOrderResponseDTO())))
                 .build();
     }
 
-    private Product getProduct() {
+    private Product createProduct() {
         return Product.builder()
-                .productId(productId)
-                .value(value)
+                .productId(PRODUCT_ID)
+                .value(VALUE)
                 .build();
     }
 
-    private Order getOrder() {
+    private Order createOrder() {
         return Order.builder()
-                .orderId(orderId)
-                .total(value)
-                .date(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd")))
-                .products(new ArrayList<>(List.of(getProduct())))
+                .orderId(ORDER_ID)
+                .total(VALUE)
+                .date(LocalDate.parse(DATE, DateTimeFormatter.ofPattern("yyyyMMdd")))
+                .products(new ArrayList<>(List.of(createProduct())))
                 .build();
     }
 
-    private OrderDetail getOrderDetail() {
+    private OrderDetail createOrderDetail() {
         return OrderDetail.builder()
                 .id(UUID.randomUUID().toString())
-                .userId(userId)
-                .name(name)
-                .orders(new ArrayList<>(List.of(getOrder())))
+                .userId(USER_ID)
+                .name(NAME)
+                .orders(new ArrayList<>(List.of(createOrder())))
                 .build();
     }
 
