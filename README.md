@@ -28,7 +28,7 @@ Este projeto é uma API de conversão de dados que recebe um arquivo e converte 
 
 | Parâmetro   | Tipo       | Descrição                                   |
 | :---------- | :--------- | :------------------------------------------ |
-| `file`      | `string` | **Obrigatório** | Campo que é passado o arquivo
+| `file`      | `string` | **Obrigatório** Campo que é passado o arquivo |
 
 
 ## Tecnologias Utilizadas
