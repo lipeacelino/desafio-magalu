@@ -41,7 +41,7 @@ Este projeto é uma API de conversão de dados que recebe um arquivo e converte 
 
 ## Execução
 
-Para executar o projeto, é necessário ter as tecnologias mencionadas instaladas. Para rodar a aplicação basta ir na classe FileConvertApiApplication, onde o método principal pode ser executado para iniciar a aplicação.
+Para executar o projeto, é necessário ter as tecnologias mencionadas instaladas, configurar o seu usuário e senha do mongo no application.properties e em seguida rodar a aplicação. Para rodar a aplicação basta ir na classe FileConvertApiApplication, onde o método principal pode ser executado para iniciar a aplicação.
 ## Estrutura do Projeto
 O projeto segue uma arquitetura em camadas, organizada da seguinte forma:
 - controllers: Camada de apresentação que lida com as requisições HTTP.
