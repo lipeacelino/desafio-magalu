@@ -51,6 +51,12 @@ O projeto segue uma arquitetura em camadas, organizada da seguinte forma:
 - mappers: Utilização do MapStruct para mapeamento entre entidades e DTOs.
 - repositories: Camada de acesso aos dados, interagindo diretamente com o banco de dados.
 - services: Lógica de negócios da aplicação.
+
+## Detalhe Sobre as Validações no Service
+
+Há duas validações que são feitas em cada linha do arquivo para garantir a integridade dos dados, se uma dessas duas validações falha, a linha em questão não é salva, mas, o processamento continua e no final é mostrado todas as linhas que tiveram erro para o usuário poder tratar e reprocessá-las.
+
+
 ## Escolha do MongoDB
 Optei pelo MongoDB devido à sua facilidade de uso e performance superior em cenários que exigem inserção frequente de grande volume de dados. Inicialmente, testes com bancos SQL mostraram latências maiores, o que foi significativamente melhorado com o uso do MongoDB, especialmente com a aplicação de índices.
 ## Práticas de Desenvolvimento
