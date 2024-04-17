@@ -54,7 +54,7 @@ O projeto segue uma arquitetura em camadas, organizada da seguinte forma:
 
 ## Detalhe Sobre as Validações no Service
 
-Há duas validações que são feitas em cada linha do arquivo para garantir a integridade dos dados, se uma dessas duas validações falha, a linha em questão não é salva, mas, o processamento continua e no final é mostrado todas as linhas que tiveram erro para o usuário poder tratar e reprocessá-las.
+Há duas validações que são feitas em cada linha do arquivo para garantir a integridade dos dados, se uma dessas duas validações falha, a linha em questão não é salva, mas, o processamento continua e ao final é mostrado todas as linhas que tiveram erro para o usuário poder tratar e reprocessá-las.
 
 
 ## Escolha do MongoDB
