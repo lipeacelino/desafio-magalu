@@ -1,11 +1,12 @@
 package com.github.lipeacelino.fileconvertapi.services;
 
-import com.github.lipeacelino.fileconvertapi.documents.Order;
+import com.github.lipeacelino.fileconvertapi.documents.internals.Order;
 import com.github.lipeacelino.fileconvertapi.documents.OrderDetail;
-import com.github.lipeacelino.fileconvertapi.documents.Product;
+import com.github.lipeacelino.fileconvertapi.documents.internals.Product;
 import com.github.lipeacelino.fileconvertapi.dto.OrderDataDTO;
 import com.github.lipeacelino.fileconvertapi.dto.OrderDetailResponseDTO;
 import com.github.lipeacelino.fileconvertapi.dto.ParametersInputDTO;
+import com.github.lipeacelino.fileconvertapi.dto.ProcessingResultDTO;
 import com.github.lipeacelino.fileconvertapi.mappers.OrderMapper;
 import com.github.lipeacelino.fileconvertapi.repositories.OrderDetailRepository;
 import lombok.RequiredArgsConstructor;
@@ -45,16 +46,22 @@ public class OrderService {
     private static final Pattern PRODUCT_ID_PATTERN = Pattern.compile("^.{10}(.{10}).*");
     private static final Pattern NAME_PATTERN = Pattern.compile("^\\d{10}\\s+|\\d{10}\\d+.*$");
 
-    public void saveOrderDetailFromFile(MultipartFile file) {
+    public ProcessingResultDTO saveOrderDetailFromFile(MultipartFile file) {
+        List<String> resultDetails = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 var orderDataDTO = extractData(line);
-                orderDetailRepository.save(processData(orderDataDTO));
+                if (validData(line, orderDataDTO, resultDetails)){
+                    orderDetailRepository.save(processData(orderDataDTO));
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return resultDetails.isEmpty()
+                ? new ProcessingResultDTO((List.of("Orders processed successfully")))
+                : new ProcessingResultDTO(resultDetails);
     }
 
     @Cacheable("orderDetail")
@@ -63,7 +70,7 @@ public class OrderService {
         query.with(pageable);
         if(parametersInputDTO.userId()!=null)query.addCriteria(Criteria.where("userId").is(parametersInputDTO.userId()));
         if(parametersInputDTO.name()!=null)query.addCriteria(Criteria.where("name").regex("^"+ parametersInputDTO.name(),"i"));
-        var total = mongoTemplate.count(query, OrderDetail.class);
+        var total = mongoTemplate.count(new Query(), OrderDetail.class);
         var pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         var content = mongoTemplate.find(query, OrderDetail.class);
         var orderDetailPage = PageableExecutionUtils.getPage(content, pageRequest, () -> total);
@@ -89,7 +96,6 @@ public class OrderService {
     }
 
     private OrderDetail processData(OrderDataDTO orderDataDTO) {
-        validateData(orderDataDTO);
         var product = Product.builder()
                 .productId(orderDataDTO.productId())
                 .value(orderDataDTO.value())
@@ -108,15 +114,16 @@ public class OrderService {
         return orderDetail;
     }
 
-    private void validateData(OrderDataDTO orderDataDTO) {
+    private boolean validData(String line, OrderDataDTO orderDataDTO, List<String> resultDetails) {
         if (orderExistsForAnotherCustomer(orderDataDTO.userId(), orderDataDTO.orderId())) {
-            System.out.println(orderDataDTO + " - Pedido existe para outro usuário");
-//            throw new RuntimeException("pedido existe para outro usuário");
+            resultDetails.add(line.concat(" - Order exists for another user"));
+            return false;
         }
         if (findOrderDetailByOrderIdAndProductId(orderDataDTO.orderId(), orderDataDTO.productId())) {
-            System.out.println(orderDataDTO + " Pedido e produto já foram cadastrados antes");
-//            throw new RuntimeException("pedido e produto já foram cadastrados antes");
+            resultDetails.add(line.concat(" - Order and product have already been registered before"));
+            return false;
         }
+        return true;
     }
 
     private boolean orderExistsForAnotherCustomer(Integer userId, Integer orderId) {
@@ -125,7 +132,6 @@ public class OrderService {
 
     private boolean findOrderDetailByOrderIdAndProductId(Integer orderId, Integer productId) {
         return orderDetailRepository.findOrderDetailByOrderIdAndProductId(orderId, productId).isPresent();
-        //se for juntar todas as exceções para mostrar no final da importação tem que botar pra receber uma lista aqui se não lançar a exceção
     }
 
     private Order updateOrder(OrderDetail orderDetail, OrderDataDTO orderDataDTO, Product product) {

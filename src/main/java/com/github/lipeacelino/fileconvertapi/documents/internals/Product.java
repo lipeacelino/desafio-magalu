@@ -1,4 +1,4 @@
-package com.github.lipeacelino.fileconvertapi.documents;
+package com.github.lipeacelino.fileconvertapi.documents.internals;
 
 import lombok.*;
 

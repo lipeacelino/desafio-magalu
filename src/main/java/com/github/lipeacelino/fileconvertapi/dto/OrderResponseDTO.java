@@ -3,6 +3,7 @@ package com.github.lipeacelino.fileconvertapi.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -14,5 +15,6 @@ public record OrderResponseDTO(
         String total,
         LocalDate date,
         List<ProductResponseDTO> products
-) {
+
+) implements Serializable {
 }

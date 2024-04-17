@@ -1,9 +1,6 @@
 package com.github.lipeacelino.fileconvertapi.controllers;
 
-import com.github.lipeacelino.fileconvertapi.dto.OrderDetailResponseDTO;
-import com.github.lipeacelino.fileconvertapi.dto.OrderResponseDTO;
-import com.github.lipeacelino.fileconvertapi.dto.ParametersInputDTO;
-import com.github.lipeacelino.fileconvertapi.dto.ProductResponseDTO;
+import com.github.lipeacelino.fileconvertapi.dto.*;
 import com.github.lipeacelino.fileconvertapi.services.OrderService;
 import com.github.lipeacelino.fileconvertapi.util.TestUtil;
 import lombok.SneakyThrows;
@@ -17,7 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -27,7 +24,6 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -54,13 +50,19 @@ class OrderControllerTest {
 
     private static final String DATE = "20210612";
 
+    private static final String RESULT_RESPONSE = "Orders processed successfully";
+
     @Test
     @SneakyThrows
     void saveOrderDetailFromFile() {
+        when(orderService.saveOrderDetailFromFile(Mockito.any(MultipartFile.class)))
+                .thenReturn(new ProcessingResultDTO(List.of(RESULT_RESPONSE)));
         mockMvc.perform(MockMvcRequestBuilders.multipart(BASE_URL.concat("/upload"))
                         .file(TestUtil.getMockMultipartFile())
                         .contentType(MediaType.MULTIPART_FORM_DATA))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.result", hasSize(1)))
+                .andExpect(content().contentType("application/json"));
 
     }
 

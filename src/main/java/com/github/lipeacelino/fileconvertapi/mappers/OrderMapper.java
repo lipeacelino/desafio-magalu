@@ -3,7 +3,7 @@ package com.github.lipeacelino.fileconvertapi.mappers;
 import com.github.lipeacelino.fileconvertapi.documents.OrderDetail;
 import com.github.lipeacelino.fileconvertapi.dto.OrderResponseDTO;
 import com.github.lipeacelino.fileconvertapi.dto.OrderDetailResponseDTO;
-import com.github.lipeacelino.fileconvertapi.documents.Order;
+import com.github.lipeacelino.fileconvertapi.documents.internals.Order;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

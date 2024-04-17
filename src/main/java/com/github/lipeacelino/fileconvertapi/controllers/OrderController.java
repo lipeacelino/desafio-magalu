@@ -2,6 +2,7 @@ package com.github.lipeacelino.fileconvertapi.controllers;
 
 import com.github.lipeacelino.fileconvertapi.dto.OrderDetailResponseDTO;
 import com.github.lipeacelino.fileconvertapi.dto.ParametersInputDTO;
+import com.github.lipeacelino.fileconvertapi.dto.ProcessingResultDTO;
 import com.github.lipeacelino.fileconvertapi.services.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,14 +25,13 @@ public class OrderController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/upload")
     @CacheEvict(allEntries = true, value = "orderDetail")
-    public void saveOrderDetailFromFile(@RequestParam MultipartFile file) {
-                orderService.saveOrderDetailFromFile(file);
+    public ProcessingResultDTO saveOrderDetailFromFile(@RequestParam MultipartFile file) {
+                return orderService.saveOrderDetailFromFile(file);
     }
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping
     public Page<OrderDetailResponseDTO> findAllOrderDetail(
-            @PageableDefault(size = 5)
                              @SortDefault.SortDefaults({
                                 @SortDefault(sort = "userId", direction = Sort.Direction.ASC)
                              })

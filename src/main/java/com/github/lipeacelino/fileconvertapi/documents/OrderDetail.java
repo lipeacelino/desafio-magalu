@@ -1,5 +1,6 @@
 package com.github.lipeacelino.fileconvertapi.documents;
 
+import com.github.lipeacelino.fileconvertapi.documents.internals.Order;
 import lombok.*;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;

@@ -1,8 +1,8 @@
 package com.github.lipeacelino.fileconvertapi.services;
 
-import com.github.lipeacelino.fileconvertapi.documents.Order;
+import com.github.lipeacelino.fileconvertapi.documents.internals.Order;
 import com.github.lipeacelino.fileconvertapi.documents.OrderDetail;
-import com.github.lipeacelino.fileconvertapi.documents.Product;
+import com.github.lipeacelino.fileconvertapi.documents.internals.Product;
 import com.github.lipeacelino.fileconvertapi.dto.OrderDetailResponseDTO;
 import com.github.lipeacelino.fileconvertapi.dto.OrderResponseDTO;
 import com.github.lipeacelino.fileconvertapi.dto.ParametersInputDTO;
@@ -66,8 +66,6 @@ class OrderServiceTest {
     void shouldUpdateWhenSaveOrderDetailFromFile() {
 
         var mockMultipartFile = TestUtil.getMockMultipartFile();
-
-        var product = createProduct();
 
         var orderDetail = createOrderDetail();
 
